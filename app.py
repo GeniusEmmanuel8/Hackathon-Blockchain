@@ -80,7 +80,7 @@ def main():
     )
     
     # Analysis options in columns
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         include_ai_insights = st.checkbox(
@@ -103,6 +103,11 @@ def main():
             index=1
         )
     
+    with col4:
+        if st.button("🔄 Refresh Data", help="Click to refresh portfolio data"):
+            st.cache_data.clear()
+            st.rerun()
+    
     # Main content area
     if not wallet_address:
         st.info("👆 Please enter a Solana wallet address above to begin analysis")
@@ -118,15 +123,28 @@ def main():
             risk_calculator = RiskCalculator()
             ai_generator = AIInsightsGenerator(gemini_api_key) if gemini_api_key else None
             
-            # Fetch portfolio data
+            # Fetch portfolio data with better error handling
             portfolio_data = portfolio_analyzer.get_portfolio_data(wallet_address, time_period)
             
-            if portfolio_data is None or portfolio_data.empty:
-                st.error("❌ No data found for this wallet address or API error occurred")
+            if portfolio_data is None:
+                st.error("❌ Failed to fetch portfolio data. Please check your wallet address and try again.")
+                st.info("💡 Try clicking the 'Refresh Data' button above")
+                return
+            
+            if portfolio_data.empty:
+                st.error("❌ No tokens found in this wallet address")
+                st.info("💡 Try a different wallet address or click 'Refresh Data'")
                 return
             
             # Calculate risk metrics
             risk_metrics = risk_calculator.calculate_risk_metrics(portfolio_data)
+            
+            # Show debug info
+            with st.expander("🔍 Debug Info", expanded=False):
+                st.write(f"**Wallet Address**: {wallet_address}")
+                st.write(f"**Portfolio Data Shape**: {portfolio_data.shape}")
+                st.write(f"**Total Value**: ${portfolio_data['value_usd'].sum():,.2f}")
+                st.write(f"**Token Count**: {len(portfolio_data)}")
             
             # Display results
             display_portfolio_overview(portfolio_data, risk_metrics)
