@@ -225,4 +225,4 @@ Please provide:
             'scenario': scenario_type,
             'analysis': f"Scenario analysis for {scenario_type} is not available without AI integration.",
             'generated_at': str(pd.Timestamp.now())
-        }
+        } 

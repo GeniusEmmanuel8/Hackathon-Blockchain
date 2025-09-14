@@ -55,10 +55,10 @@ def main():
     st.markdown('<h1 class="main-header">🔗 Solana Risk Dashboard</h1>', unsafe_allow_html=True)
     st.markdown("### Analyze your Solana portfolio risk and get AI-powered insights")
     
-    # Get API keys from environment variables (no user input needed)
-    helius_api_key = os.getenv("HELIUS_API_KEY", "")
-    coingecko_api_key = os.getenv("COINGECKO_API_KEY", "")
-    gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+    # API Keys - Hardcoded for hackathon demo
+    helius_api_key = "327e16d6-4cdc-46a5-8b1a-9ed373e848d4"
+    coingecko_api_key = ""
+    gemini_api_key = "AIzaSyAlry5jmb1qqbFgvZztYImH6BC2-eFUpKU"
     
     # Main page layout
     st.header("🔍 Portfolio Analysis")
@@ -100,14 +100,7 @@ def main():
         show_sample_data()
         return
     
-    if not helius_api_key:
-        st.error("❌ Helius API key is required to fetch wallet data")
-        st.info("""
-        **The app needs to be configured with API keys to work properly.**
-        
-        Please contact the administrator or check the setup documentation.
-        """)
-        return
+    # API keys are now hardcoded, so no need to check
     
     # Initialize analyzers
     try:
