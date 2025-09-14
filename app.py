@@ -310,6 +310,13 @@ def display_portfolio_explanation(portfolio_data, risk_metrics):
     
     with st.expander("🎯 What is Concentration Risk?"):
         concentration = risk_metrics.get('concentration_risk', 0)
+        # Ensure concentration is a number
+        if isinstance(concentration, str):
+            try:
+                concentration = float(concentration)
+            except (ValueError, TypeError):
+                concentration = 0.0
+        
         st.write(f"""
         **Concentration Risk ({concentration:.1%})** measures how much of your portfolio is in your largest position.
         
@@ -322,47 +329,90 @@ def display_portfolio_explanation(portfolio_data, risk_metrics):
 
 def display_ai_insights(portfolio_data, risk_metrics, ai_generator):
     """Display AI-generated insights"""
-    st.header("🤖 AI-Powered Portfolio Insights")
+    st.header("🤖 AI-Powered Portfolio Analysis")
     
-    with st.spinner("🔄 Generating AI insights..."):
+    with st.spinner("🔄 Generating comprehensive AI analysis..."):
         insights = ai_generator.generate_insights(portfolio_data, risk_metrics)
         
-        # Create a more engaging layout with columns
-        col1, col2 = st.columns(2)
+        # Detailed Gemini Summary Section
+        st.subheader("📊 AI Portfolio Summary")
         
-        with col1:
-            st.subheader("📊 What This Means")
-            st.info(insights.get('analysis', 'No analysis available'))
-            
-            st.subheader("⚠️ Risk Level")
-            risk_text = insights.get('risk_assessment', 'No risk assessment available')
-            st.warning(risk_text)
-        
-        with col2:
-            st.subheader("💡 Smart Recommendations")
-            recommendations = insights.get('recommendations', 'No recommendations available')
-            st.success(recommendations)
-            
-            # Add actionable insights
-            st.subheader("🎯 Quick Actions")
-            st.write("Based on your portfolio analysis:")
-            st.write("• Consider diversifying across different token categories")
-            st.write("• Monitor high-correlation pairs for risk management")
-            st.write("• Rebalance if concentration risk exceeds 20%")
-            
-        # Add a summary section
-        st.subheader("📈 Key Takeaways")
+        # Get portfolio metrics for context
         total_value = portfolio_data['value_usd'].sum()
         num_tokens = len(portfolio_data)
         volatility = risk_metrics.get('portfolio_volatility', 0)
         sharpe = risk_metrics.get('sharpe_ratio', 0)
+        concentration = risk_metrics.get('concentration_risk', 0)
         
-        summary_text = f"""
-        Your portfolio contains **{num_tokens:,} tokens** worth **${total_value:,.2f}**. 
-        With a volatility of **{volatility:.1%}** and Sharpe ratio of **{sharpe:.2f}**, 
-        this represents a {'moderate' if volatility < 0.5 else 'high'} risk profile.
-        """
-        st.markdown(summary_text)
+        # Create a comprehensive summary card
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: white;">🎯 Portfolio Overview</h3>
+            <p><strong>Total Value:</strong> ${total_value:,.2f} | <strong>Tokens:</strong> {num_tokens:,} | <strong>Volatility:</strong> {volatility:.1%}</p>
+            <p><strong>Risk-Adjusted Return (Sharpe):</strong> {sharpe:.2f} | <strong>Concentration:</strong> {concentration:.1%}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # AI Analysis in columns
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🧠 AI Analysis")
+            st.write(insights.get('analysis', 'No analysis available'))
+            
+        with col2:
+            st.subheader("⚠️ Risk Assessment")
+            st.write(insights.get('risk_assessment', 'No risk assessment available'))
+        
+        # Recommendations section
+        st.subheader("💡 AI Recommendations")
+        recommendations = insights.get('recommendations', 'No recommendations available')
+        st.write(recommendations)
+        
+        # How metrics affect risk scores
+        st.subheader("📈 How Your Metrics Affect Risk Scores")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Volatility Impact", 
+                     f"{volatility:.1%}",
+                     help="Higher volatility = Higher risk score")
+            if volatility > 0.5:
+                st.warning("High volatility increases your risk score significantly")
+            elif volatility > 0.2:
+                st.info("Moderate volatility contributes to medium risk")
+            else:
+                st.success("Low volatility keeps risk score low")
+        
+        with col2:
+            st.metric("Sharpe Ratio Impact",
+                     f"{sharpe:.2f}",
+                     help="Higher Sharpe = Better risk-adjusted returns")
+            if sharpe > 1.0:
+                st.success("Excellent risk-adjusted performance")
+            elif sharpe > 0.5:
+                st.info("Good risk-adjusted performance")
+            else:
+                st.warning("Poor risk-adjusted performance - high risk for low returns")
+        
+        with col3:
+            st.metric("Concentration Impact",
+                     f"{concentration:.1%}",
+                     help="Higher concentration = Higher diversification risk")
+            if concentration > 0.4:
+                st.error("High concentration - major risk factor")
+            elif concentration > 0.2:
+                st.warning("Moderate concentration - consider diversifying")
+            else:
+                st.success("Well diversified - low concentration risk")
+        
+        # Actionable insights
+        st.subheader("🎯 Recommended Actions")
+        st.write("Based on your AI analysis:")
+        st.write("• **Portfolio Size**: With " + str(num_tokens) + " tokens, you have " + ("excellent" if num_tokens > 100 else "good" if num_tokens > 50 else "limited") + " diversification")
+        st.write("• **Risk Management**: " + ("Consider reducing position sizes" if concentration > 0.3 else "Your diversification is well-balanced"))
+        st.write("• **Performance**: " + ("Focus on risk management" if sharpe < 0.5 else "Your risk-adjusted returns are solid"))
 
 def display_correlation_analysis(portfolio_data, correlation_analyzer, time_period):
     """Display correlation analysis and heatmap"""
