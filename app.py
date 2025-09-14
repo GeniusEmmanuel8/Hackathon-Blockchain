@@ -12,7 +12,6 @@ import json
 from portfolio_analyzer import PortfolioAnalyzer
 from risk_metrics import RiskCalculator
 from ai_insights import AIInsightsGenerator
-from correlation_analyzer import CorrelationAnalyzer
 
 # Load environment variables
 load_dotenv()
@@ -117,7 +116,6 @@ def main():
             portfolio_analyzer = PortfolioAnalyzer(helius_api_key, coingecko_api_key)
             risk_calculator = RiskCalculator()
             ai_generator = AIInsightsGenerator(gemini_api_key) if gemini_api_key else None
-            correlation_analyzer = CorrelationAnalyzer(coingecko_api_key)
             
             # Fetch portfolio data
             portfolio_data = portfolio_analyzer.get_portfolio_data(wallet_address, time_period)
@@ -132,9 +130,7 @@ def main():
             # Display results
             display_portfolio_overview(portfolio_data, risk_metrics)
             display_portfolio_explanation(portfolio_data, risk_metrics)
-            display_portfolio_visualizations(portfolio_data, risk_metrics)
             display_risk_analysis(risk_metrics, risk_tolerance)
-            display_correlation_analysis(portfolio_data, correlation_analyzer, time_period)
             
             if include_ai_insights and ai_generator:
                 display_ai_insights(portfolio_data, risk_metrics, ai_generator)
@@ -337,12 +333,31 @@ def display_ai_insights(portfolio_data, risk_metrics, ai_generator):
         # Detailed Gemini Summary Section
         st.subheader("📊 AI Portfolio Summary")
         
-        # Get portfolio metrics for context
+        # Get portfolio metrics for context with proper type handling
         total_value = portfolio_data['value_usd'].sum()
         num_tokens = len(portfolio_data)
         volatility = risk_metrics.get('portfolio_volatility', 0)
         sharpe = risk_metrics.get('sharpe_ratio', 0)
         concentration = risk_metrics.get('concentration_risk', 0)
+        
+        # Ensure all values are numeric
+        if isinstance(volatility, str):
+            try:
+                volatility = float(volatility)
+            except (ValueError, TypeError):
+                volatility = 0.0
+        
+        if isinstance(sharpe, str):
+            try:
+                sharpe = float(sharpe)
+            except (ValueError, TypeError):
+                sharpe = 0.0
+                
+        if isinstance(concentration, str):
+            try:
+                concentration = float(concentration)
+            except (ValueError, TypeError):
+                concentration = 0.0
         
         # Create a comprehensive summary card
         st.markdown(f"""
@@ -414,87 +429,7 @@ def display_ai_insights(portfolio_data, risk_metrics, ai_generator):
         st.write("• **Risk Management**: " + ("Consider reducing position sizes" if concentration > 0.3 else "Your diversification is well-balanced"))
         st.write("• **Performance**: " + ("Focus on risk management" if sharpe < 0.5 else "Your risk-adjusted returns are solid"))
 
-def display_correlation_analysis(portfolio_data, correlation_analyzer, time_period):
-    """Display correlation analysis and heatmap"""
-    st.header("🔗 Token Correlation Analysis")
-    
-    if portfolio_data.empty or len(portfolio_data) < 2:
-        st.info("⚠️ Need at least 2 tokens for correlation analysis")
-        return
-    
-    # Get token symbols
-    symbols = portfolio_data['symbol'].tolist()
-    
-    with st.spinner("🔄 Analyzing token correlations..."):
-        # Get historical data
-        historical_data = correlation_analyzer.get_historical_prices(symbols, 30)
-        
-        if historical_data.empty:
-            st.warning("⚠️ Unable to fetch historical data for correlation analysis")
-            return
-        
-        # Calculate correlations
-        correlation_matrix = correlation_analyzer.calculate_correlations(historical_data)
-        
-        if correlation_matrix.empty:
-            st.warning("⚠️ Unable to calculate correlations")
-            return
-        
-        # Display correlation insights
-        insights = correlation_analyzer.analyze_correlation_insights(correlation_matrix)
-        
-        # Show summary metrics
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Average Correlation", f"{insights['avg_correlation']:.3f}")
-        
-        with col2:
-            st.metric("Diversification Score", f"{insights['diversification_score']:.3f}")
-        
-        with col3:
-            st.metric("High Correlations", len(insights['high_correlations']))
-        
-        with col4:
-            risk_level = "Low" if insights['diversification_score'] > 0.7 else "Medium" if insights['diversification_score'] > 0.4 else "High"
-            st.metric("Correlation Risk", risk_level)
-        
-        # Display correlation heatmap
-        st.subheader("📊 Correlation Heatmap")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            fig_heatmap = correlation_analyzer.create_correlation_heatmap(correlation_matrix)
-            st.plotly_chart(fig_heatmap, use_container_width=True)
-        
-        with col2:
-            fig_network = correlation_analyzer.create_correlation_network(correlation_matrix, threshold=0.5)
-            st.plotly_chart(fig_network, use_container_width=True)
-        
-        # Display correlation summary
-        st.subheader("📈 Correlation Summary")
-        
-        fig_summary = correlation_analyzer.create_correlation_summary_chart(insights)
-        st.plotly_chart(fig_summary, use_container_width=True)
-        
-        # Display insights
-        if insights['risk_insights']:
-            st.subheader("💡 Correlation Insights")
-            for insight in insights['risk_insights']:
-                st.write(f"• {insight}")
-        
-        # Display high correlations
-        if insights['high_correlations']:
-            st.subheader("🔴 High Correlations")
-            for corr in insights['high_correlations'][:5]:  # Show top 5
-                st.write(f"**{corr['pair']}**: {corr['correlation']:.3f}")
-        
-        # Display low correlations
-        if insights['low_correlations']:
-            st.subheader("🟢 Low/Negative Correlations")
-            for corr in insights['low_correlations'][:5]:  # Show top 5
-                st.write(f"**{corr['pair']}**: {corr['correlation']:.3f}")
+# Correlation analysis removed as requested
 
 def display_export_options(portfolio_data, risk_metrics):
     """Display export options"""
