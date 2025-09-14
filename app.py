@@ -74,6 +74,7 @@ def main():
     # Wallet address input
     wallet_address = st.text_input(
         "Solana Wallet Address",
+        value="9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
         placeholder="Enter wallet address (e.g., 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM)",
         help="Enter a valid Solana wallet address to analyze"
     )
