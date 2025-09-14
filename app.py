@@ -59,27 +59,45 @@ def main():
     with st.sidebar:
         st.header("🔧 Configuration")
         
-        # API Keys
-        helius_api_key = st.text_input(
-            "Helius API Key", 
-            value=os.getenv("HELIUS_API_KEY", ""),
-            type="password",
-            help="Get your free API key from https://helius.xyz"
-        )
+        # API Keys - Auto-configure from environment variables
+        helius_api_key = os.getenv("HELIUS_API_KEY", "")
+        coingecko_api_key = os.getenv("COINGECKO_API_KEY", "")
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
         
-        coingecko_api_key = st.text_input(
-            "CoinGecko API Key (Optional)", 
-            value=os.getenv("COINGECKO_API_KEY", ""),
-            type="password",
-            help="For higher rate limits"
-        )
+        # Show API key status
+        if helius_api_key:
+            st.success("✅ Helius API Key: Configured")
+        else:
+            st.error("❌ Helius API Key: Not found")
+            st.info("💡 Add HELIUS_API_KEY to your environment variables")
         
-        gemini_api_key = st.text_input(
-            "Google Gemini API Key (Optional)", 
-            value=os.getenv("GEMINI_API_KEY", ""),
-            type="password",
-            help="For AI-generated insights"
-        )
+        if gemini_api_key:
+            st.success("✅ Gemini API Key: Configured")
+        else:
+            st.warning("⚠️ Gemini API Key: Not found (AI insights disabled)")
+        
+        if coingecko_api_key:
+            st.success("✅ CoinGecko API Key: Configured")
+        else:
+            st.info("ℹ️ CoinGecko API Key: Not needed (using Helius for prices)")
+        
+        # Optional: Allow manual override
+        with st.expander("🔧 Manual API Key Override (Optional)"):
+            helius_override = st.text_input(
+                "Helius API Key Override", 
+                type="password",
+                help="Override the environment variable"
+            )
+            if helius_override:
+                helius_api_key = helius_override
+            
+            gemini_override = st.text_input(
+                "Gemini API Key Override", 
+                type="password",
+                help="Override the environment variable"
+            )
+            if gemini_override:
+                gemini_api_key = gemini_override
         
         st.divider()
         
@@ -113,7 +131,13 @@ def main():
         return
     
     if not helius_api_key:
-        st.error("❌ Please provide a Helius API key to fetch wallet data")
+        st.error("❌ Helius API key is required to fetch wallet data")
+        st.info("""
+        **To fix this:**
+        1. Set the environment variable: `export HELIUS_API_KEY="your_key_here"`
+        2. Or use the manual override in the sidebar
+        3. Get your free API key from: https://helius.xyz
+        """)
         return
     
     # Initialize analyzers
