@@ -45,16 +45,34 @@ class PortfolioAnalyzer:
             data = response.json()
             
             token_accounts = []
+            
+            # Mock token data for demo (since Helius doesn't provide prices)
+            mock_tokens = {
+                'So11111111111111111111111111111111111111112': {'symbol': 'SOL', 'name': 'Solana', 'price': 25.50},
+                'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': {'symbol': 'USDC', 'name': 'USD Coin', 'price': 1.00},
+                'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': {'symbol': 'USDT', 'name': 'Tether', 'price': 1.00},
+                '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': {'symbol': 'RAY', 'name': 'Raydium', 'price': 2.15},
+                'SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt': {'symbol': 'SRM', 'name': 'Serum', 'price': 0.85},
+            }
+            
             for token in data.get('tokens', []):
                 if token.get('amount', 0) > 0:  # Only include tokens with balance
+                    mint = token.get('mint')
+                    mock_data = mock_tokens.get(mint, {'symbol': f'TOKEN_{mint[:8]}', 'name': f'Token {mint[:8]}', 'price': 0.01})
+                    
+                    # Calculate actual token amount
+                    amount = token.get('amount', 0)
+                    decimals = token.get('decimals', 9)
+                    actual_amount = amount / (10 ** decimals)
+                    
                     token_accounts.append({
-                        'mint': token.get('mint'),
-                        'amount': token.get('amount', 0),
-                        'decimals': token.get('decimals', 9),
-                        'symbol': token.get('symbol', 'Unknown'),
-                        'name': token.get('name', 'Unknown Token'),
-                        'price_usd': token.get('price', 0),
-                        'value_usd': token.get('value', 0)
+                        'mint': mint,
+                        'amount': actual_amount,
+                        'decimals': decimals,
+                        'symbol': mock_data['symbol'],
+                        'name': mock_data['name'],
+                        'price_usd': mock_data['price'],
+                        'value_usd': actual_amount * mock_data['price']
                     })
             
             return token_accounts
