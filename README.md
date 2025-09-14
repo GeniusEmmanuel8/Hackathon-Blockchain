@@ -25,23 +25,23 @@ HELIUS_API_KEY → Solana wallet + price data
 GEMINI_API_KEY (optional) → AI insights
 
 Quick Start
-# Clone repo
+## Clone repo
 git clone https://github.com/GeniusEmmanuel8/Hackathon-Blockchain.git
 cd solana-risk-dashboard
 
-# Install dependencies
+## Install dependencies
 pip install -r requirements.txt
 
-# Run app
+## Run app
 streamlit run app.py
 Config (.env file)
 HELIUS_API_KEY=your_helius_api_key
 GEMINI_API_KEY=your_gemini_api_key   # optional
 
-# Usage
+## Usage
 Enter your Solana wallet address in the sidebar.
 View portfolio breakdown, risk metrics, and AI insights.
 (Optional) Export results to CSV/PDF.
 
-# License
+## License
 MIT License – see LICENSE file.
