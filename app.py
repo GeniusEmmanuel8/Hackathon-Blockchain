@@ -55,88 +55,57 @@ def main():
     st.markdown('<h1 class="main-header">🔗 Solana Risk Dashboard</h1>', unsafe_allow_html=True)
     st.markdown("### Analyze your Solana portfolio risk and get AI-powered insights")
     
-    # Sidebar for wallet input
-    with st.sidebar:
-        st.header("🔧 Configuration")
-        
-        # API Keys - Auto-configure from environment variables
-        helius_api_key = os.getenv("HELIUS_API_KEY", "")
-        coingecko_api_key = os.getenv("COINGECKO_API_KEY", "")
-        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
-        
-        # Show API key status
-        if helius_api_key:
-            st.success("✅ Helius API Key: Configured")
-        else:
-            st.error("❌ Helius API Key: Not found")
-            st.info("💡 Add HELIUS_API_KEY to your environment variables")
-        
-        if gemini_api_key:
-            st.success("✅ Gemini API Key: Configured")
-        else:
-            st.warning("⚠️ Gemini API Key: Not found (AI insights disabled)")
-        
-        if coingecko_api_key:
-            st.success("✅ CoinGecko API Key: Configured")
-        else:
-            st.info("ℹ️ CoinGecko API Key: Not needed (using Helius for prices)")
-        
-        # Optional: Allow manual override
-        with st.expander("🔧 Manual API Key Override (Optional)"):
-            helius_override = st.text_input(
-                "Helius API Key Override", 
-                type="password",
-                help="Override the environment variable"
-            )
-            if helius_override:
-                helius_api_key = helius_override
-            
-            gemini_override = st.text_input(
-                "Gemini API Key Override", 
-                type="password",
-                help="Override the environment variable"
-            )
-            if gemini_override:
-                gemini_api_key = gemini_override
-        
-        st.divider()
-        
-        # Wallet address input
-        wallet_address = st.text_input(
-            "Solana Wallet Address",
-            placeholder="Enter wallet address (e.g., 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM)",
-            help="Enter a valid Solana wallet address to analyze"
+    # Get API keys from environment variables (no user input needed)
+    helius_api_key = os.getenv("HELIUS_API_KEY", "")
+    coingecko_api_key = os.getenv("COINGECKO_API_KEY", "")
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+    
+    # Main page layout
+    st.header("🔍 Portfolio Analysis")
+    
+    # Wallet address input
+    wallet_address = st.text_input(
+        "Solana Wallet Address",
+        placeholder="Enter wallet address (e.g., 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM)",
+        help="Enter a valid Solana wallet address to analyze"
+    )
+    
+    # Analysis options in columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        include_ai_insights = st.checkbox(
+            "🤖 AI Insights", 
+            value=bool(gemini_api_key),
+            help="Generate AI-powered insights and recommendations"
         )
-        
-        # Analysis options
-        st.subheader("📊 Analysis Options")
-        include_ai_insights = st.checkbox("Include AI Insights", value=bool(gemini_api_key))
+    
+    with col2:
         risk_tolerance = st.selectbox(
-            "Risk Tolerance",
+            "⚖️ Risk Tolerance",
             ["Conservative", "Moderate", "Aggressive"],
             index=1
         )
-        
-        # Time period for historical data
+    
+    with col3:
         time_period = st.selectbox(
-            "Historical Data Period",
+            "📅 Historical Period",
             ["7 days", "30 days", "90 days", "1 year"],
             index=1
         )
     
     # Main content area
     if not wallet_address:
-        st.info("👆 Please enter a Solana wallet address in the sidebar to begin analysis")
+        st.info("👆 Please enter a Solana wallet address above to begin analysis")
         show_sample_data()
         return
     
     if not helius_api_key:
         st.error("❌ Helius API key is required to fetch wallet data")
         st.info("""
-        **To fix this:**
-        1. Set the environment variable: `export HELIUS_API_KEY="your_key_here"`
-        2. Or use the manual override in the sidebar
-        3. Get your free API key from: https://helius.xyz
+        **The app needs to be configured with API keys to work properly.**
+        
+        Please contact the administrator or check the setup documentation.
         """)
         return
     
