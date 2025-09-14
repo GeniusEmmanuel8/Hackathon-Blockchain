@@ -52,8 +52,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    st.markdown('<h1 class="main-header">🔗 Solana Risk Dashboard</h1>', unsafe_allow_html=True)
-    st.markdown("### Analyze your Solana portfolio risk and get AI-powered insights")
+    # Bigger, more prominent title
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 4rem; font-weight: bold; background: linear-gradient(90deg, #8B5CF6, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">
+            🔗 Solana Risk Dashboard
+        </h1>
+        <h2 style="font-size: 1.5rem; color: #94A3B8; font-weight: 300; margin-top: 0;">
+            Analyze your Solana portfolio risk and get AI-powered insights
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     # API Keys - Hardcoded for hackathon demo
     helius_api_key = "327e16d6-4cdc-46a5-8b1a-9ed373e848d4"
@@ -122,6 +131,7 @@ def main():
             
             # Display results
             display_portfolio_overview(portfolio_data, risk_metrics)
+            display_portfolio_explanation(portfolio_data, risk_metrics)
             display_portfolio_visualizations(portfolio_data, risk_metrics)
             display_risk_analysis(risk_metrics, risk_tolerance)
             display_correlation_analysis(portfolio_data, correlation_analyzer, time_period)
@@ -269,21 +279,90 @@ def display_risk_analysis(risk_metrics, risk_tolerance):
         for rec in recommendations:
             st.write(f"• {rec}")
 
+def display_portfolio_explanation(portfolio_data, risk_metrics):
+    """Display explanation of what the user is seeing"""
+    st.header("📚 Understanding Your Portfolio")
+    
+    # Create expandable sections for different concepts
+    with st.expander("🔍 What is Portfolio Volatility?", expanded=True):
+        volatility = risk_metrics.get('portfolio_volatility', 0)
+        st.write(f"""
+        **Volatility ({volatility:.1%})** measures how much your portfolio's value fluctuates over time.
+        
+        • **Low volatility (< 20%)**: Your portfolio value stays relatively stable
+        • **Medium volatility (20-50%)**: Moderate price swings, typical for crypto portfolios  
+        • **High volatility (> 50%)**: Large price swings, higher risk but potentially higher returns
+        
+        Your portfolio shows {'low' if volatility < 0.2 else 'medium' if volatility < 0.5 else 'high'} volatility.
+        """)
+    
+    with st.expander("📊 What is the Sharpe Ratio?"):
+        sharpe = risk_metrics.get('sharpe_ratio', 0)
+        st.write(f"""
+        **Sharpe Ratio ({sharpe:.2f})** measures risk-adjusted returns - how much return you get per unit of risk.
+        
+        • **Good (> 1.0)**: Strong risk-adjusted performance
+        • **Average (0.5-1.0)**: Decent risk-adjusted performance
+        • **Poor (< 0.5)**: High risk for relatively low returns
+        
+        Your portfolio shows {'excellent' if sharpe > 1.0 else 'good' if sharpe > 0.5 else 'needs improvement'} risk-adjusted performance.
+        """)
+    
+    with st.expander("🎯 What is Concentration Risk?"):
+        concentration = risk_metrics.get('concentration_risk', 0)
+        st.write(f"""
+        **Concentration Risk ({concentration:.1%})** measures how much of your portfolio is in your largest position.
+        
+        • **Low (< 20%)**: Well diversified across many tokens
+        • **Medium (20-40%)**: Some concentration, consider diversifying
+        • **High (> 40%)**: Highly concentrated, significant risk
+        
+        Your largest position represents {concentration:.1%} of your portfolio, indicating {'good' if concentration < 0.2 else 'moderate' if concentration < 0.4 else 'high'} concentration risk.
+        """)
+
 def display_ai_insights(portfolio_data, risk_metrics, ai_generator):
     """Display AI-generated insights"""
-    st.header("🤖 AI Insights")
+    st.header("🤖 AI-Powered Portfolio Insights")
     
-    with st.spinner("Generating AI insights..."):
+    with st.spinner("🔄 Generating AI insights..."):
         insights = ai_generator.generate_insights(portfolio_data, risk_metrics)
         
-        st.markdown("### Portfolio Analysis")
-        st.write(insights.get('analysis', 'No insights available'))
+        # Create a more engaging layout with columns
+        col1, col2 = st.columns(2)
         
-        st.markdown("### Risk Assessment")
-        st.write(insights.get('risk_assessment', 'No risk assessment available'))
+        with col1:
+            st.subheader("📊 What This Means")
+            st.info(insights.get('analysis', 'No analysis available'))
+            
+            st.subheader("⚠️ Risk Level")
+            risk_text = insights.get('risk_assessment', 'No risk assessment available')
+            st.warning(risk_text)
         
-        st.markdown("### Recommendations")
-        st.write(insights.get('recommendations', 'No recommendations available'))
+        with col2:
+            st.subheader("💡 Smart Recommendations")
+            recommendations = insights.get('recommendations', 'No recommendations available')
+            st.success(recommendations)
+            
+            # Add actionable insights
+            st.subheader("🎯 Quick Actions")
+            st.write("Based on your portfolio analysis:")
+            st.write("• Consider diversifying across different token categories")
+            st.write("• Monitor high-correlation pairs for risk management")
+            st.write("• Rebalance if concentration risk exceeds 20%")
+            
+        # Add a summary section
+        st.subheader("📈 Key Takeaways")
+        total_value = portfolio_data['value_usd'].sum()
+        num_tokens = len(portfolio_data)
+        volatility = risk_metrics.get('portfolio_volatility', 0)
+        sharpe = risk_metrics.get('sharpe_ratio', 0)
+        
+        summary_text = f"""
+        Your portfolio contains **{num_tokens:,} tokens** worth **${total_value:,.2f}**. 
+        With a volatility of **{volatility:.1%}** and Sharpe ratio of **{sharpe:.2f}**, 
+        this represents a {'moderate' if volatility < 0.5 else 'high'} risk profile.
+        """
+        st.markdown(summary_text)
 
 def display_correlation_analysis(portfolio_data, correlation_analyzer, time_period):
     """Display correlation analysis and heatmap"""

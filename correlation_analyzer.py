@@ -161,7 +161,6 @@ class CorrelationAnalyzer:
             hoverongaps=False,
             colorbar=dict(
                 title="Correlation",
-                titleside="right",
                 tickmode="array",
                 tickvals=[-1, -0.5, 0, 0.5, 1],
                 ticktext=["-1", "-0.5", "0", "0.5", "1"]
