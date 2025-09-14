@@ -1,0 +1,8 @@
+# Helius API Key (Get from https://helius.xyz)
+HELIUS_API_KEY=your_helius_api_key_here
+
+# CoinGecko API Key (Optional, for higher rate limits)
+COINGECKO_API_KEY=your_coingecko_api_key_here
+
+# Google Gemini API Key (Optional, for AI insights)
+GEMINI_API_KEY=your_gemini_api_key_here
