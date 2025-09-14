@@ -23,30 +23,40 @@ A comprehensive risk analysis dashboard for Solana wallets that provides portfol
 
 ## 🚀 Quick Start
 
-### **Option 1: Clone and Run**
+### **🎯 For Hackathon Demo (Recommended)**
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/solana-risk-dashboard.git
+git clone https://github.com/GeniusEmmanuel8/Hackathon-Blockchain.git
+cd solana-risk-dashboard
+
+# Launch demo (one command)
+./LAUNCH_DEMO.sh
+```
+This script will:
+- ✅ Activate the virtual environment
+- ✅ Test all components
+- ✅ Launch the dashboard at http://localhost:8501
+
+### **Option 1: Manual Setup**
+```bash
+# Clone the repository
+git clone https://github.com/GeniusEmmanuel8/Hackathon-Blockchain.git
 cd solana-risk-dashboard
 
 # Install dependencies
 python3 -m pip install -r requirements.txt
 
-# Set up environment variables
-cp env_example.txt .env
-# Edit .env with your API keys
-
 # Run the app
-streamlit run app.py
+source venv/bin/activate && streamlit run app.py --server.headless true --server.port 8501
 ```
 
-### **Option 2: One-Click Setup**
-```bash
-git clone https://github.com/yourusername/solana-risk-dashboard.git
-cd solana-risk-dashboard
-python3 setup.py
-streamlit run app.py
-```
+### **🎯 Demo Features Ready**
+- ✅ Real-time Solana wallet analysis via Helius API
+- ✅ Advanced risk metrics (volatility, Sharpe ratio, concentration)
+- ✅ AI-powered insights using Google Gemini
+- ✅ Robust error handling and retry logic
+- ✅ Professional UI with refresh functionality
+- ✅ Realistic portfolio values ($2.5B demo portfolio)
 
 ## 🔧 Configuration
 

@@ -40,9 +40,28 @@ class PortfolioAnalyzer:
         }
         
         try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
+            # Retry logic for API timeouts
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    print(f"🔄 Attempting to fetch wallet data (attempt {attempt + 1}/{max_retries})")
+                    response = requests.get(url, params=params, timeout=30)
+                    response.raise_for_status()
+                    data = response.json()
+                    break
+                except requests.exceptions.Timeout:
+                    print(f"⏱️ Timeout on attempt {attempt + 1}, retrying...")
+                    if attempt == max_retries - 1:
+                        raise Exception("API request timed out after multiple attempts. This wallet may have too many tokens.")
+                    continue
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 504:
+                        print(f"🔄 Gateway timeout on attempt {attempt + 1}, retrying...")
+                        if attempt == max_retries - 1:
+                            raise Exception("API gateway timeout. This wallet may be too large or the API is temporarily unavailable.")
+                        continue
+                    else:
+                        raise e
             
             token_accounts = []
             

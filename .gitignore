@@ -64,3 +64,9 @@ quick_test.py
 # Temporary files
 *.tmp
 *.temp
+
+# Presentation and demo files (don't upload to GitHub)
+PRESENTATION_SCRIPT.txt
+DEMO_CHECKLIST.txt
+DEMO_NOTES.txt
+HACKATHON_SCRIPT.txt
