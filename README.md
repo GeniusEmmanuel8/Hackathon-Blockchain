@@ -43,5 +43,10 @@ Enter your Solana wallet address in the sidebar.
 View portfolio breakdown, risk metrics, and AI insights.
 (Optional) Export results to CSV/PDF.
 
+## Notes
+due to helius api rate limits it can only be run once every minute or so.
+AI was used to build this project.
+
+
 ## License
 MIT License – see LICENSE file.
