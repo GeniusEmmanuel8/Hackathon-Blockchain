@@ -51,90 +51,118 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    st.markdown('<h1 class="main-header">🔗 Solana Risk Dashboard</h1>', unsafe_allow_html=True)
-    st.markdown("### Analyze your Solana portfolio risk and get AI-powered insights")
+    # Bigger, more prominent title
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 4rem; font-weight: bold; background: linear-gradient(90deg, #8B5CF6, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">
+            🔗 Solana Risk Dashboard
+        </h1>
+        <h2 style="font-size: 1.5rem; color: #94A3B8; font-weight: 300; margin-top: 0;">
+            Analyze your Solana portfolio risk and get AI-powered insights
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Sidebar for wallet input
-    with st.sidebar:
-        st.header("🔧 Configuration")
-        
-        # API Keys
-        helius_api_key = st.text_input(
-            "Helius API Key", 
-            value=os.getenv("HELIUS_API_KEY", ""),
-            type="password",
-            help="Get your free API key from https://helius.xyz"
+    # API Keys - Hardcoded for hackathon demo
+    helius_api_key = "327e16d6-4cdc-46a5-8b1a-9ed373e848d4"
+    coingecko_api_key = ""
+    gemini_api_key = "AIzaSyAlry5jmb1qqbFgvZztYImH6BC2-eFUpKU"
+    
+    # Main page layout
+    st.header("🔍 Portfolio Analysis")
+    
+    # Wallet address input with validation
+    wallet_address = st.text_input(
+        "Solana Wallet Address",
+        value="9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+        placeholder="Enter wallet address (e.g., 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM)",
+        help="Enter a valid Solana wallet address to analyze"
+    )
+    
+    # Analysis options in columns
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        include_ai_insights = st.checkbox(
+            "🤖 AI Insights", 
+            value=bool(gemini_api_key),
+            help="Generate AI-powered insights and recommendations"
         )
-        
-        coingecko_api_key = st.text_input(
-            "CoinGecko API Key (Optional)", 
-            value=os.getenv("COINGECKO_API_KEY", ""),
-            type="password",
-            help="For higher rate limits"
-        )
-        
-        openai_api_key = st.text_input(
-            "OpenAI API Key (Optional)", 
-            value=os.getenv("OPENAI_API_KEY", ""),
-            type="password",
-            help="For AI-generated insights"
-        )
-        
-        st.divider()
-        
-        # Wallet address input
-        wallet_address = st.text_input(
-            "Solana Wallet Address",
-            placeholder="Enter wallet address (e.g., 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM)",
-            help="Enter a valid Solana wallet address to analyze"
-        )
-        
-        # Analysis options
-        st.subheader("📊 Analysis Options")
-        include_ai_insights = st.checkbox("Include AI Insights", value=bool(openai_api_key))
+    
+    with col2:
         risk_tolerance = st.selectbox(
-            "Risk Tolerance",
+            "⚖️ Risk Tolerance",
             ["Conservative", "Moderate", "Aggressive"],
             index=1
         )
-        
-        # Time period for historical data
+    
+    with col3:
         time_period = st.selectbox(
-            "Historical Data Period",
+            "📅 Historical Period",
             ["7 days", "30 days", "90 days", "1 year"],
             index=1
         )
     
+    with col4:
+        if st.button("🔄 Refresh Data", help="Click to refresh portfolio data"):
+            st.cache_data.clear()
+            st.rerun()
+    
     # Main content area
     if not wallet_address:
-        st.info("👆 Please enter a Solana wallet address in the sidebar to begin analysis")
+        st.info("👆 Please enter a Solana wallet address above to begin analysis")
         show_sample_data()
         return
     
-    if not helius_api_key:
-        st.error("❌ Please provide a Helius API key to fetch wallet data")
-        return
+    # API keys are now hardcoded, so no need to check
     
     # Initialize analyzers
     try:
         with st.spinner("🔄 Fetching wallet data and analyzing portfolio..."):
             portfolio_analyzer = PortfolioAnalyzer(helius_api_key, coingecko_api_key)
             risk_calculator = RiskCalculator()
-            ai_generator = AIInsightsGenerator(openai_api_key) if openai_api_key else None
+            ai_generator = AIInsightsGenerator(gemini_api_key) if gemini_api_key else None
             
             # Fetch portfolio data
             portfolio_data = portfolio_analyzer.get_portfolio_data(wallet_address, time_period)
             
-            if portfolio_data is None or portfolio_data.empty:
-                st.error("❌ No data found for this wallet address or API error occurred")
+            if portfolio_data is None:
+                st.error("❌ Failed to fetch portfolio data. This could be due to:")
+                st.markdown("""
+                - **Invalid wallet address**: Please check the address format
+                - **Wallet too large**: Some wallets have too many tokens and timeout
+                - **API temporarily unavailable**: Helius API may be experiencing issues
+                - **Network connectivity**: Check your internet connection
+                """)
+                st.info("💡 Try clicking the 'Refresh Data' button above, or use a different wallet address")
+                
+                # Show some example wallets that work
+                with st.expander("💡 Try these example wallet addresses that are known to work:"):
+                    st.code("""
+9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+So11111111111111111111111111111111111111112
+EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+                    """)
+                return
+            
+            if portfolio_data.empty:
+                st.error("❌ No tokens with meaningful value found in this wallet")
+                st.info("💡 This wallet may only contain very small amounts or unknown tokens")
                 return
             
             # Calculate risk metrics
             risk_metrics = risk_calculator.calculate_risk_metrics(portfolio_data)
             
+            # Show debug info
+            with st.expander("🔍 Debug Info", expanded=False):
+                st.write(f"**Wallet Address**: {wallet_address}")
+                st.write(f"**Portfolio Data Shape**: {portfolio_data.shape}")
+                st.write(f"**Total Value**: ${portfolio_data['value_usd'].sum():,.2f}")
+                st.write(f"**Token Count**: {len(portfolio_data)}")
+            
             # Display results
             display_portfolio_overview(portfolio_data, risk_metrics)
-            display_portfolio_visualizations(portfolio_data, risk_metrics)
+            display_portfolio_explanation(portfolio_data, risk_metrics)
             display_risk_analysis(risk_metrics, risk_tolerance)
             
             if include_ai_insights and ai_generator:
@@ -280,21 +308,159 @@ def display_risk_analysis(risk_metrics, risk_tolerance):
         for rec in recommendations:
             st.write(f"• {rec}")
 
+def display_portfolio_explanation(portfolio_data, risk_metrics):
+    """Display explanation of what the user is seeing"""
+    st.header("📚 Understanding Your Portfolio")
+    
+    # Create expandable sections for different concepts
+    with st.expander("🔍 What is Portfolio Volatility?", expanded=True):
+        volatility = risk_metrics.get('portfolio_volatility', 0)
+        st.write(f"""
+        **Volatility ({volatility:.1%})** measures how much your portfolio's value fluctuates over time.
+        
+        • **Low volatility (< 20%)**: Your portfolio value stays relatively stable
+        • **Medium volatility (20-50%)**: Moderate price swings, typical for crypto portfolios  
+        • **High volatility (> 50%)**: Large price swings, higher risk but potentially higher returns
+        
+        Your portfolio shows {'low' if volatility < 0.2 else 'medium' if volatility < 0.5 else 'high'} volatility.
+        """)
+    
+    with st.expander("📊 What is the Sharpe Ratio?"):
+        sharpe = risk_metrics.get('sharpe_ratio', 0)
+        st.write(f"""
+        **Sharpe Ratio ({sharpe:.2f})** measures risk-adjusted returns - how much return you get per unit of risk.
+        
+        • **Good (> 1.0)**: Strong risk-adjusted performance
+        • **Average (0.5-1.0)**: Decent risk-adjusted performance
+        • **Poor (< 0.5)**: High risk for relatively low returns
+        
+        Your portfolio shows {'excellent' if sharpe > 1.0 else 'good' if sharpe > 0.5 else 'needs improvement'} risk-adjusted performance.
+        """)
+    
+    with st.expander("🎯 What is Concentration Risk?"):
+        concentration = risk_metrics.get('concentration_risk', 0)
+        # Ensure concentration is a number
+        if isinstance(concentration, str):
+            try:
+                concentration = float(concentration)
+            except (ValueError, TypeError):
+                concentration = 0.0
+        
+        st.write(f"""
+        **Concentration Risk ({concentration:.1%})** measures how much of your portfolio is in your largest position.
+        
+        • **Low (< 20%)**: Well diversified across many tokens
+        • **Medium (20-40%)**: Some concentration, consider diversifying
+        • **High (> 40%)**: Highly concentrated, significant risk
+        
+        Your largest position represents {concentration:.1%} of your portfolio, indicating {'good' if concentration < 0.2 else 'moderate' if concentration < 0.4 else 'high'} concentration risk.
+        """)
+
 def display_ai_insights(portfolio_data, risk_metrics, ai_generator):
     """Display AI-generated insights"""
-    st.header("🤖 AI Insights")
+    st.header("🤖 AI-Powered Portfolio Analysis")
     
-    with st.spinner("Generating AI insights..."):
+    with st.spinner("🔄 Generating comprehensive AI analysis..."):
         insights = ai_generator.generate_insights(portfolio_data, risk_metrics)
         
-        st.markdown("### Portfolio Analysis")
-        st.write(insights.get('analysis', 'No insights available'))
+        # Detailed Gemini Summary Section
+        st.subheader("📊 AI Portfolio Summary")
         
-        st.markdown("### Risk Assessment")
-        st.write(insights.get('risk_assessment', 'No risk assessment available'))
+        # Get portfolio metrics for context with proper type handling
+        total_value = portfolio_data['value_usd'].sum()
+        num_tokens = len(portfolio_data)
         
-        st.markdown("### Recommendations")
-        st.write(insights.get('recommendations', 'No recommendations available'))
+        # Ensure all values are numeric before formatting
+        volatility = risk_metrics.get('portfolio_volatility', 0)
+        if isinstance(volatility, str):
+            try:
+                volatility = float(volatility)
+            except (ValueError, TypeError):
+                volatility = 0.0
+        
+        sharpe = risk_metrics.get('sharpe_ratio', 0)
+        if isinstance(sharpe, str):
+            try:
+                sharpe = float(sharpe)
+            except (ValueError, TypeError):
+                sharpe = 0.0
+                
+        concentration = risk_metrics.get('concentration_risk', 0)
+        if isinstance(concentration, str):
+            try:
+                concentration = float(concentration)
+            except (ValueError, TypeError):
+                concentration = 0.0
+        
+        # Create a comprehensive summary card
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: white;">🎯 Portfolio Overview</h3>
+            <p><strong>Total Value:</strong> ${total_value:,.2f} | <strong>Tokens:</strong> {num_tokens:,} | <strong>Volatility:</strong> {volatility:.1%}</p>
+            <p><strong>Risk-Adjusted Return (Sharpe):</strong> {sharpe:.2f} | <strong>Concentration:</strong> {concentration:.1%}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # AI Analysis in columns
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🧠 AI Analysis")
+            st.write(insights.get('analysis', 'No analysis available'))
+            
+        with col2:
+            st.subheader("⚠️ Risk Assessment")
+            st.write(insights.get('risk_assessment', 'No risk assessment available'))
+            
+        # Recommendations section
+        st.subheader("💡 AI Recommendations")
+        recommendations = insights.get('recommendations', 'No recommendations available')
+        st.write(recommendations)
+        
+        # How metrics affect risk scores
+        st.subheader("📈 How Your Metrics Affect Risk Scores")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Volatility Impact", 
+                     f"{volatility:.1%}",
+                     help="Higher volatility = Higher risk score")
+            if volatility > 0.5:
+                st.warning("High volatility increases your risk score significantly")
+            elif volatility > 0.2:
+                st.info("Moderate volatility contributes to medium risk")
+            else:
+                st.success("Low volatility keeps risk score low")
+        
+        with col2:
+            st.metric("Sharpe Ratio Impact",
+                     f"{sharpe:.2f}",
+                     help="Higher Sharpe = Better risk-adjusted returns")
+            if sharpe > 1.0:
+                st.success("Excellent risk-adjusted performance")
+            elif sharpe > 0.5:
+                st.info("Good risk-adjusted performance")
+            else:
+                st.warning("Poor risk-adjusted performance - high risk for low returns")
+        
+        with col3:
+            st.metric("Concentration Impact",
+                     f"{concentration:.1%}",
+                     help="Higher concentration = Higher diversification risk")
+            if concentration > 0.4:
+                st.error("High concentration - major risk factor")
+            elif concentration > 0.2:
+                st.warning("Moderate concentration - consider diversifying")
+            else:
+                st.success("Well diversified - low concentration risk")
+        
+        # Actionable insights
+        st.subheader("🎯 Recommended Actions")
+        st.write("Based on your AI analysis:")
+        st.write("• **Portfolio Size**: With " + str(num_tokens) + " tokens, you have " + ("excellent" if num_tokens > 100 else "good" if num_tokens > 50 else "limited") + " diversification")
+        st.write("• **Risk Management**: " + ("Consider reducing position sizes" if concentration > 0.3 else "Your diversification is well-balanced"))
+        st.write("• **Performance**: " + ("Focus on risk management" if sharpe < 0.5 else "Your risk-adjusted returns are solid"))
 
 def display_export_options(portfolio_data, risk_metrics):
     """Display export options"""
