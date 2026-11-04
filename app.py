@@ -63,10 +63,13 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # API Keys - Hardcoded for hackathon demo
-    helius_api_key = "327e16d6-4cdc-46a5-8b1a-9ed373e848d4"
-    coingecko_api_key = ""
-    gemini_api_key = "AIzaSyAlry5jmb1qqbFgvZztYImH6BC2-eFUpKU"
+    # API keys come from the environment (or a local .env file), never from source code.
+    helius_api_key = os.getenv("HELIUS_API_KEY", "")
+    coingecko_api_key = os.getenv("COINGECKO_API_KEY", "")
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+    if not helius_api_key:
+        st.error("HELIUS_API_KEY is not set. Copy env_example.txt to .env and add your key (see README).")
+        st.stop()
     
     # Main page layout
     st.header("🔍 Portfolio Analysis")

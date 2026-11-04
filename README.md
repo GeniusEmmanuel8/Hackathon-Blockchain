@@ -27,7 +27,7 @@ GEMINI_API_KEY (optional) → AI insights
 Quick Start
 ## Clone repo
 git clone https://github.com/GeniusEmmanuel8/Hackathon-Blockchain.git
-cd solana-risk-dashboard
+cd Hackathon-Blockchain
 
 ## Install dependencies
 pip install -r requirements.txt
@@ -35,8 +35,13 @@ pip install -r requirements.txt
 ## Run app
 streamlit run app.py
 Config (.env file)
+Copy `env_example.txt` to `.env` and fill in your own keys (the app reads them from the environment):
 HELIUS_API_KEY=your_helius_api_key
 GEMINI_API_KEY=your_gemini_api_key   # optional
+
+## Security
+- API keys must only live in your local `.env` file (it is git-ignored) or in environment variables. Never put them in source files.
+- Earlier versions of this repository contained hard-coded keys. Those keys must be treated as compromised and are not valid for use; if you forked the repo before this change, do not reuse them.
 
 ## Usage
 Enter your Solana wallet address in the sidebar.
